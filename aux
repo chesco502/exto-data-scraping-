@@ -1,71 +1,106 @@
+
+import os
+import time
 from selenium import webdriver
-from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-import time 
-import pandas as pd
-import requests
-from selenium.common.exceptions import NoSuchElementException
-import numpy as np
-import scipy.interpolate as si
-import urllib.request
-import os 
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+import webbrowser
 
-options = webdriver.ChromeOptions()
-aux=os.path.realpath(__file__ )
-
-options.add_experimental_option('prefs', {
-"download.default_directory": str(aux), #Change default directory for downloads
-"download.prompt_for_download": False, #To auto download the file
-"download.directory_upgrade": True,
-"plugins.always_open_pdf_externally": False #It will not show PDF directly in chrome
-
-})
+def is_pdf(url):
+    return True
 
 
+def encontrar_e_abrir_pdf(diretorio, nome_arquivo):
+    # Percorre todos os arquivos no diretório fornecido
+    for root, dirs, arquivos in os.walk(diretorio):
+        for arquivo in arquivos:
+            # Verifica se o arquivo é um PDF e tem o nome desejado
+            if arquivo.lower() == nome_arquivo.lower() and arquivo.lower().endswith('.pdf'):
+                caminho_arquivo = os.path.join(root, arquivo)
+                print(f'Arquivo encontrado: {caminho_arquivo}')
+                
+                # Abre o arquivo PDF com o visualizador padrão do sistema
+                webbrowser.open(caminho_arquivo)
+                return caminho_arquivo
+
+
+def is_captcha_present(driver):
+    captcha_text = "Este desafio é para testar se você é um visitante humano"
+    try:
+        return captcha_text in driver.page_source
+    except:
+        return False
+
+def wait_for_captcha_solution(driver):
+    print("CAPTCHA detected. Please solve it manually.")
+    while is_captcha_present(driver):
+        time.sleep(5)  # Check every 5 seconds
+    print("CAPTCHA appears to be solved. Proceeding...")
+
+def main():
+    # Set up Chrome options for downloading
+    chrome_options = webdriver.ChromeOptions()
+    download_dir = os.path.join(os.getcwd(), "appChesco")
+    os.makedirs(download_dir, exist_ok=True)
+    chrome_options.add_experimental_option("prefs", {
+        "download.default_directory": download_dir,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "plugins.always_open_pdf_externally": True
+    })
+
+    driver = webdriver.Chrome(options=chrome_options)
+    url = "https://diariooficial.prefeitura.sp.gov.br/md_epubli_controlador.php?acao=inicio"
+
+    try:
+        driver.get(url)
+
+        if is_captcha_present(driver):
+            wait_for_captcha_solution(driver)
+
+        
+        try:
+            element = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "/html/body/main/div[2]/div/div/div[3]/div[2]/div[2]/a"))
+            )
+            download_url = element.get_attribute("href")
+
+            if is_pdf(download_url):
+                print("File is a PDF. Downloading...")
+                # Download the PDF file using Selenium
+                driver.get(download_url)
+
+                # Wait for the download to complete
+                time.sleep(5)  # Adjust this time based on typical download duration
+
+                print(f"Download complete. File should be in {download_dir}")
+            else:
+                print("The file is not a PDF. Please check the URL or try again later.")
+
+        except TimeoutException:
+            print("The element was not found within the specified time. The page structure might have changed.")
+
+        except NoSuchElementException:
+            print("The element was not found. The page structure might have changed.")
+
+    finally:
+        encontrar_e_abrir_pdf(download_dir, "Edicao.pdf")
+
+       
 
 
 
 
 
 
+# Exemplo de uso
 
 
 
-
-
-
-driver = webdriver.Chrome()
-url = "https://diariooficial.prefeitura.sp.gov.br/md_epubli_controlador.php?acao=inicio"
-driver.get(url)
-driver.implicitly_wait(5)
-
-teste=driver.find_element(By.XPATH,"/html/body/main/div[2]/div/div/div[3]/div[2]/div[2]/a").get_attribute("href")
-driver.close()
-drivers = webdriver.Chrome(options)
-
-drivers.get(teste)
-
-
-time.sleep(1000)
-
-
-
-count =0
-
-file1 = open('palavras.txt', 'r')
-teste=file1.readlines()
-keys = []
-for line in teste:
-    
-    keys.append("Line{}: {}".format(count, line.strip()))
-file1.close
-
-
-
-
-
-
+if __name__ == "__main__":
+    main()
 
 
 
