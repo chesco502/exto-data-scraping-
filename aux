@@ -1,0 +1,71 @@
+from selenium import webdriver
+from selenium.webdriver import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+import time 
+import pandas as pd
+import requests
+from selenium.common.exceptions import NoSuchElementException
+import numpy as np
+import scipy.interpolate as si
+import urllib.request
+import os 
+
+options = webdriver.ChromeOptions()
+aux=os.path.realpath(__file__ )
+
+options.add_experimental_option('prefs', {
+"download.default_directory": str(aux), #Change default directory for downloads
+"download.prompt_for_download": False, #To auto download the file
+"download.directory_upgrade": True,
+"plugins.always_open_pdf_externally": False #It will not show PDF directly in chrome
+
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+driver = webdriver.Chrome()
+url = "https://diariooficial.prefeitura.sp.gov.br/md_epubli_controlador.php?acao=inicio"
+driver.get(url)
+driver.implicitly_wait(5)
+
+teste=driver.find_element(By.XPATH,"/html/body/main/div[2]/div/div/div[3]/div[2]/div[2]/a").get_attribute("href")
+driver.close()
+drivers = webdriver.Chrome(options)
+
+drivers.get(teste)
+
+
+time.sleep(1000)
+
+
+
+count =0
+
+file1 = open('palavras.txt', 'r')
+teste=file1.readlines()
+keys = []
+for line in teste:
+    
+    keys.append("Line{}: {}".format(count, line.strip()))
+file1.close
+
+
+
+
+
+
+
+
+
