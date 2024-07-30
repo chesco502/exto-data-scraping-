@@ -7,6 +7,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import webbrowser
+from pdfminer.high_level import extract_text
+import re
 
 def is_pdf(url):
     return True
@@ -22,8 +24,31 @@ def encontrar_e_abrir_pdf(diretorio, nome_arquivo):
                 print(f'Arquivo encontrado: {caminho_arquivo}')
                 
                 # Abre o arquivo PDF com o visualizador padrão do sistema
+                teste = extract_text(caminho_arquivo)
+                chaves=palavras()
+                print(teste)
+                print(chaves)
+                for x in chaves:
+                    if(teste.find(x)!=-1):
+                        print(x)
+                        
+                    
+                
                 webbrowser.open(caminho_arquivo)
                 return caminho_arquivo
+            
+
+
+def remove(diretorio, nome_arquivo):
+    # Percorre todos os arquivos no diretório fornecido
+    for root, dirs, arquivos in os.walk(diretorio):
+        for arquivo in arquivos:
+            # Verifica se o arquivo é um PDF e tem o nome desejado
+            if arquivo.lower() == nome_arquivo.lower() and arquivo.lower().endswith('.pdf'):
+                caminho_arquivo = os.path.join(root, arquivo)
+                os.remove(caminho_arquivo)
+               
+                
 
 
 def is_captcha_present(driver):
@@ -44,6 +69,8 @@ def main():
     chrome_options = webdriver.ChromeOptions()
     download_dir = os.path.join(os.getcwd(), "appChesco")
     os.makedirs(download_dir, exist_ok=True)
+    #remove(download_dir,"Edicao.pdf")
+    encontrar_e_abrir_pdf(download_dir, "Edicao.pdf" )
     chrome_options.add_experimental_option("prefs", {
         "download.default_directory": download_dir,
         "download.prompt_for_download": False,
@@ -55,23 +82,27 @@ def main():
     url = "https://diariooficial.prefeitura.sp.gov.br/md_epubli_controlador.php?acao=inicio"
 
     try:
+        
         driver.get(url)
-
+        driver.delete_all_cookies()
         if is_captcha_present(driver):
             wait_for_captcha_solution(driver)
 
         
         try:
-            element = WebDriverWait(driver, 10).until(
+            element = WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable((By.XPATH, "/html/body/main/div[2]/div/div/div[3]/div[2]/div[2]/a"))
             )
             download_url = element.get_attribute("href")
 
             if is_pdf(download_url):
                 print("File is a PDF. Downloading...")
-                # Download the PDF file using Selenium
+                driver.implicitly_wait(8)
+                driver.delete_all_cookies()
                 driver.get(download_url)
-
+                if is_captcha_present(driver):
+                    wait_for_captcha_solution(driver)
+                
                 # Wait for the download to complete
                 time.sleep(5)  # Adjust this time based on typical download duration
 
@@ -84,11 +115,29 @@ def main():
 
         except NoSuchElementException:
             print("The element was not found. The page structure might have changed.")
+        except Exception :
+            #main()
+         print("Espere alguns minutos e tente novamente")
+
 
     finally:
+    
         encontrar_e_abrir_pdf(download_dir, "Edicao.pdf")
 
        
+def palavras():
+    file1 = open('palavras.txt', 'r')
+    teste=file1.readlines()
+    count = 0
+    palavras=[]
+    for line in teste:
+        count += 1
+        palavras.append(line.strip())
+    file1.close()
+    return palavras
+    
+
+
 
 
 
@@ -100,7 +149,7 @@ def main():
 
 
 if __name__ == "__main__":
+    
     main()
-
 
 
