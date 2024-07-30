@@ -7,8 +7,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import webbrowser
-from pdfminer.high_level import extract_text
-import re
+import PyPDF2
+
+
 
 def is_pdf(url):
     return True
@@ -24,17 +25,21 @@ def encontrar_e_abrir_pdf(diretorio, nome_arquivo):
                 print(f'Arquivo encontrado: {caminho_arquivo}')
                 
                 # Abre o arquivo PDF com o visualizador padrão do sistema
-                teste = extract_text(caminho_arquivo)
+                read_pdf = PyPDF2.PdfReader(caminho_arquivo)
+                number_of_pages = len(read_pdf.pages)
                 chaves=palavras()
-                print(teste)
-                print(chaves)
-                for x in chaves:
-                    if(teste.find(x)!=-1):
-                        print(x)
+                for y in range(number_of_pages):
+                    page = read_pdf.pages[y]
+                    page_content = page.extract_text()
+                    for x in chaves:
+                        if(page_content.find(x)!=-1):
+                         print("foi achado a palavra:"+x+"  na pagina :"+str(y))
+
+                         
                         
                     
                 
-                webbrowser.open(caminho_arquivo)
+                
                 return caminho_arquivo
             
 
@@ -69,8 +74,8 @@ def main():
     chrome_options = webdriver.ChromeOptions()
     download_dir = os.path.join(os.getcwd(), "appChesco")
     os.makedirs(download_dir, exist_ok=True)
-    #remove(download_dir,"Edicao.pdf")
-    encontrar_e_abrir_pdf(download_dir, "Edicao.pdf" )
+    remove(download_dir,"Edicao.pdf")
+    
     chrome_options.add_experimental_option("prefs", {
         "download.default_directory": download_dir,
         "download.prompt_for_download": False,
@@ -121,12 +126,12 @@ def main():
 
 
     finally:
-    
+        driver.close()
         encontrar_e_abrir_pdf(download_dir, "Edicao.pdf")
 
        
 def palavras():
-    file1 = open('palavras.txt', 'r')
+    file1 = open('f:\Facu\python\palavras.txt', 'r')
     teste=file1.readlines()
     count = 0
     palavras=[]
@@ -151,5 +156,3 @@ def palavras():
 if __name__ == "__main__":
     
     main()
-
-
