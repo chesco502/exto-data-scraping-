@@ -1,0 +1,30 @@
+import os
+
+def classificar_arquivos(diretorio):
+    arquivos_pessoa = []
+    arquivos_animal = []
+    arquivos_carro = []
+
+    # Percorrer todos os arquivos e subdiretórios no diretório fornecido
+    for root, dirs, files in os.walk(diretorio):
+        for file in files:
+            # Obter o caminho completo do arquivo
+            caminho_arquivo = os.path.join(root, file)
+
+            # Verificar se o nome do arquivo contém "Pessoa", "Animal" ou "Carro"
+            if "Pessoa" in file:
+                arquivos_pessoa.append(caminho_arquivo)
+            elif "Animal" in file:
+                arquivos_animal.append(caminho_arquivo)
+            elif "Carro" in file:
+                arquivos_carro.append(caminho_arquivo)
+
+    return arquivos_pessoa, arquivos_animal, arquivos_carro
+
+# Exemplo de uso
+diretorio_repositorio = "/caminho/do/repositorio"  # Substitua pelo caminho do seu repositório
+arquivos_pessoa, arquivos_animal, arquivos_carro = classificar_arquivos(diretorio_repositorio)
+
+print("Arquivos Pessoa:", arquivos_pessoa)
+print("Arquivos Animal:", arquivos_animal)
+print("Arquivos Carro:", arquivos_carro)
